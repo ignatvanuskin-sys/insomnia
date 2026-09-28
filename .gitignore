@@ -1,0 +1,17 @@
+node_modules
+.next
+out
+next-env.d.ts
+
+# заявки клиентов
+data
+
+# QA-артефакты
+qa
+qa2
+qa3
+qa3
+*.log
+*.err
+qa-*.js
+scrape.js

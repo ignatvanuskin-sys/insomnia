@@ -42,15 +42,20 @@ export default function Home() {
                 <span>Камера 04</span>
               </div>
 
-              <h1 className="anim-hero-2 mt-6 font-display text-[15vw] leading-[0.82] font-black tracking-[0.02em] text-bone text-shadow-hard sm:text-[11vw] lg:text-[8.5vw]">
+              {/* Глитч включается только на больших экранах:
+                  на телефоне постоянное дрожание мешает читать крупный текст. */}
+              <h1
+                className="anim-hero-2 type-hero mt-6 font-display text-[15vw] font-bold text-bone text-shadow-hard sm:glitch sm:text-[11vw] lg:text-[8.5vw]"
+                data-text="ИНСОМНИЯ"
+              >
                 ИНСОМНИЯ
               </h1>
 
-              <p className="anim-hero-3 mt-5 max-w-md font-mono text-[13px] leading-relaxed text-ashlight sm:text-sm">
+              <p className="anim-hero-3 mt-6 max-w-md font-serif text-[1.35rem] leading-snug text-ashlight sm:text-2xl">
                 {business.tagline}
               </p>
 
-              <p className="anim-hero-4 mt-6 max-w-md border-l border-blood/60 pl-4 font-mono text-[12px] leading-relaxed text-dust">
+              <p className="anim-hero-4 mt-6 max-w-md border-l border-blood/60 pl-4 font-body text-[14px] leading-relaxed text-dust">
                 Это не фильм. Ты не смотришь историю — ты оказываешься внутри неё.
               </p>
 
@@ -263,7 +268,7 @@ export default function Home() {
               ))}
             </div>
 
-            <p className="reveal mt-6 font-mono text-[11px] leading-relaxed text-dust">
+            <p className="reveal mt-6 font-body text-[13px] leading-relaxed text-dust">
               Количество игроков, длительность, возраст и стоимость уточните у администратора —
               мы не публикуем цифры, которые не можем подтвердить.
             </p>
@@ -285,10 +290,10 @@ export default function Home() {
             <p className="reveal font-mono text-[10px] tracking-huge text-dust uppercase">
               Дверь открыта
             </p>
-            <h2 className="reveal mt-6 font-display text-4xl leading-[0.95] font-black tracking-wide text-bone sm:text-6xl">
+            <h2 className="reveal mt-6 font-display text-4xl leading-[0.98] font-bold tracking-wide text-bone sm:text-6xl">
               Ты уже здесь.
             </h2>
-            <p className="reveal mx-auto mt-6 max-w-md font-mono text-[12px] leading-relaxed text-dust sm:text-[13px]">
+            <p className="reveal mx-auto mt-6 max-w-md font-serif text-lg leading-snug text-dust sm:text-xl">
               Остался один вопрос: ты правда хочешь узнать, что там внутри?
             </p>
             <div className="reveal mt-10 flex flex-col justify-center gap-3 sm:flex-row">

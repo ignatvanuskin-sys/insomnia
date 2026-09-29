@@ -49,7 +49,7 @@ export default function Header({ hideCta = false }: { hideCta?: boolean }) {
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:h-16 sm:px-6">
           <Link
             href="/"
-            className="font-display text-sm font-black tracking-[0.24em] text-bone transition-colors hover:text-white sm:text-base"
+            className="font-display text-sm font-bold tracking-[0.26em] text-bone transition-colors hover:text-white sm:text-base"
           >
             ИНСОМНИЯ
           </Link>

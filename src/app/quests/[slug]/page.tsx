@@ -81,10 +81,10 @@ export default async function QuestPage({ params }: Params) {
             <p className="mt-8 font-mono text-[10px] tracking-huge text-blood-bright uppercase">
               {q.kicker}
             </p>
-            <h1 className="mt-4 font-display text-[13vw] leading-[0.88] font-black tracking-wide text-bone text-shadow-hard sm:text-[8vw] lg:text-[6vw]">
+            <h1 className="glitch mt-4 font-display text-[12vw] leading-[0.94] font-bold tracking-wide text-bone text-shadow-hard sm:text-[7.5vw] lg:text-[5.5vw]" data-text={q.name}>
               {q.name}
             </h1>
-            <p className="mt-6 max-w-lg font-mono text-[13px] leading-relaxed text-ashlight">
+            <p className="mt-6 max-w-lg font-body text-[15px] leading-relaxed text-ashlight">
               {q.hook}
             </p>
 

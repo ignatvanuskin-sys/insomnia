@@ -14,7 +14,7 @@ export default function Location() {
             <p className="font-mono text-[10px] tracking-huge text-blood-bright uppercase">
               Где искать
             </p>
-            <h2 className="mt-5 font-display text-3xl leading-[1.05] font-black tracking-wide text-bone sm:text-5xl">
+            <h2 className="mt-5 font-display text-[1.75rem] leading-[1.08] font-bold tracking-wide text-bone sm:text-5xl">
               Караганда
             </h2>
 

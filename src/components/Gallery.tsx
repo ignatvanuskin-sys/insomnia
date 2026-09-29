@@ -20,7 +20,7 @@ export default function Gallery() {
           <p className="font-mono text-[10px] tracking-huge text-blood-bright uppercase">
             Материалы
           </p>
-          <h2 className="mt-5 font-display text-3xl leading-[1.05] font-black tracking-wide text-bone sm:text-5xl">
+          <h2 className="mt-5 font-display text-[1.75rem] leading-[1.08] font-bold tracking-wide text-bone sm:text-5xl">
             Что там внутри
           </h2>
           <p className="mt-5 font-mono text-[12px] leading-relaxed text-dust">

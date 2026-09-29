@@ -39,10 +39,10 @@ export default function Success({ form, onShare }: { form: Form; onShare: () => 
           <p className="font-mono text-[10px] tracking-huge text-blood-bright uppercase flicker">
             Заявка принята
           </p>
-          <h1 className="mt-5 font-display text-4xl leading-[0.95] font-black tracking-wide text-bone sm:text-6xl">
+          <h1 className="mt-5 font-display text-[2.5rem] leading-[0.98] font-bold tracking-wide text-bone sm:text-6xl">
             ТЫ ВНУТРИ.
           </h1>
-          <p className="mx-auto mt-5 max-w-sm font-mono text-[12px] leading-relaxed text-dust">
+          <p className="mx-auto mt-5 max-w-sm font-body text-[13px] leading-relaxed text-dust">
             Администратор свяжется с тобой и подтвердит время. Бронь закреплена за тобой.
           </p>
         </div>

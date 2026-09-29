@@ -90,7 +90,7 @@ export default function BookingPage() {
     <div id="main" className="min-h-dvh pb-28 sm:pb-16">
       <Header hideCta />
       <div className="mx-auto max-w-2xl px-4 pt-24 pb-10 sm:px-6 sm:pt-28">
-        <h1 className="font-display text-3xl leading-[0.95] font-black tracking-wide text-bone sm:text-5xl">
+        <h1 className="font-display text-[1.75rem] leading-[1.02] font-bold tracking-wide text-bone sm:text-5xl">
           Бронь
         </h1>
         <p className="mt-3 font-mono text-[12px] leading-relaxed text-dust">

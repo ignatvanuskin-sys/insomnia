@@ -1,135 +1,194 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-type Line = { text: string; delay: number };
-
-const LINES: Line[] = [
-  { text: 'ARCHIVE 04 // КАМЕРА НАБЛЮДЕНИЯ', delay: 400 },
-  { text: 'СИГНАЛ ВОССТАНОВЛЕН', delay: 1500 },
-  { text: 'ОБЪЕКТ В КАДРЕ — ПУСТ', delay: 2500 },
-  { text: 'РЕЗИДЕНТ ВНУТРИ НЕ ЗАРЕГИСТРИРОВАН', delay: 3400 },
-];
+type Line = { text: string; delay: number; corrupted?: string };
 
 /**
- * Вступительная сцена. Показывает не «ещё один сайт»,
- * а последовательность: сигнал → шум → кадр → название.
- * Респект к пользователю: короткая, есть кнопка пропуска,
- * полностью отключается при prefers-reduced-motion.
+ * Протокол наблюдателя. Строки выводятся как служебный лог камеры,
+ * но одна из них «ломается» — это и есть момент ужаса:
+ * система фиксирует присутствие, которого быть не должно.
+ */
+const LINES: Line[] = [
+  { text: 'АРХИВ 04 // КАМЕРА НАБЛЮДЕНИЯ', delay: 500 },
+  { text: 'СИГНАЛ ВОССТАНОВЛЕН', delay: 1600 },
+  { text: 'ОБЪЕКТ В КАДРЕ — ПУСТ', delay: 2700 },
+  { text: 'ОБЪЕКТ В КАДРЕ — НЕ ПУСТ', delay: 3500, corrupted: 'ОБЪЕКТ В КАДРЕ — ПУСТ' },
+  { text: 'РЕЗИДЕНТ ВНУТРИ НЕ ЗАРЕГИСТРИРОВАН', delay: 4600 },
+];
+
+const TITLE = 'ИНСОМНИЯ';
+const SUBTITLE = 'Караганда · Хоррор-квест';
+const DONE_KEY = 'insomnia-intro-seen';
+
+/**
+ * Вступительная сцена. Логика: зритель заходит на сайт и видит не сайт,
+ * а кадр с камеры наблюдения, который постепенно выходит из строя.
+ *
+ * Требования, которые здесь соблюдаются:
+ *  - кнопка «Пропустить» доступна с первой секунды;
+ *  - при prefers-reduced-motion сцена не запускается вообще;
+ *  - показывается один раз за сессию (sessionStorage), чтобы не преследовать;
+ *  - анимации только CSS, без таймерных тиков на каждый кадр.
  */
 export default function Intro() {
-  // 'pending' — ещё не решали, показывать ли вступление вообще.
-  const [phase, setPhase] = useState<'pending' | 'black' | 'lines' | 'title' | 'out' | 'done'>(
+  const [phase, setPhase] = useState<'pending' | 'lines' | 'alarm' | 'title' | 'out' | 'done'>(
     'pending'
   );
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
+  const finish = useCallback(() => {
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
+    try {
+      window.sessionStorage.setItem(DONE_KEY, '1');
+    } catch {
+      /* приватный режим — покажем ещё раз при следующем заходе */
+    }
+    setPhase('done');
+  }, []);
+
   useEffect(() => {
-    // При отключённой анимации вступление не запускаем вовсе:
-    // пользователь не должен ни ждать, ни закрывать его вручную.
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       setPhase('done');
       return;
     }
 
-    setPhase('black');
-    const push = (fn: () => void, ms: number) => timers.current.push(setTimeout(fn, ms));
-    const last = LINES[LINES.length - 1].delay;
+    // Не мучаем того, кто уже это видел в этой сессии.
+    try {
+      if (window.sessionStorage.getItem(DONE_KEY) === '1') {
+        setPhase('done');
+        return;
+      }
+    } catch {
+      /* нет доступа к sessionStorage — показываем */
+    }
 
-    push(() => setPhase('lines'), 200);
-    push(() => setPhase('title'), last + 900);
-    push(() => setPhase('out'), last + 2600);
-    push(() => setPhase('done'), last + 3900);
+    const push = (fn: () => void, ms: number) => timers.current.push(setTimeout(fn, ms));
+
+    push(() => setPhase('lines'), 250);
+    push(() => setPhase('alarm'), 5400);
+    push(() => setPhase('title'), 6000);
+    push(() => setPhase('out'), 8200);
+    push(() => setPhase('done'), 9000);
 
     const scheduled = timers.current;
     return () => scheduled.forEach(clearTimeout);
   }, []);
 
+  // Пробел / Enter / Escape — пропуск, как на настоящей камере.
+  useEffect(() => {
+    if (phase === 'pending' || phase === 'done' || phase === 'out') return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === ' ' || e.key === 'Enter' || e.key === 'Escape') {
+        e.preventDefault();
+        finish();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [phase, finish]);
+
   if (phase === 'pending' || phase === 'out' || phase === 'done') return null;
+
+  const showLines = phase === 'lines';
+  const showAlarm = phase === 'alarm';
+  const showTitle = phase === 'title';
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex flex-col justify-end bg-void px-6 pb-16 sm:pb-24"
-      aria-hidden={phase === 'title'}
+      role="dialog"
+      aria-label="Заставка"
+      className="fixed inset-0 z-[9999] flex flex-col justify-end overflow-hidden bg-void px-6 pb-16 sm:pb-24"
     >
-      {/* мерцающий «объектив» */}
+      {/* Слои помех и света: ощущение дешёвой камеры наблюдения */}
+      <div className="scanlines pointer-events-none absolute inset-0" aria-hidden />
+      <div className="tear-lines pointer-events-none absolute inset-0" aria-hidden />
+      <div className="light-leak pointer-events-none absolute inset-0" aria-hidden />
+
+      {/* Виньетка медленно сжимается — зрителя будто затягивает */}
       <div
-        className="pointer-events-none absolute inset-0 light-leak"
-        style={{ opacity: phase === 'black' ? 0 : 1, transition: 'opacity 1.2s ease' }}
+        className="vignette-close pointer-events-none absolute inset-0"
+        aria-hidden
+        style={{
+          background:
+            'radial-gradient(ellipse 70% 55% at 50% 50%, transparent 25%, rgba(0,0,0,0.72) 70%, rgba(0,0,0,0.95) 100%)',
+        }}
       />
 
-      <div className="relative z-10 mx-auto w-full max-w-md">
-        {phase !== 'black' && (
-          <div className="mb-8 space-y-1.5 font-mono text-[10px] leading-relaxed tracking-[0.14em] text-ashlight uppercase">
+      {/* Красная вспышка в момент, когда «объект» появляется в кадре */}
+      {showAlarm && (
+        <div
+          className="alarm-flash pointer-events-none absolute inset-0"
+          aria-hidden
+          style={{
+            background:
+              'radial-gradient(ellipse at center, rgba(168,28,28,0.55), transparent 70%)',
+          }}
+        />
+      )}
+
+      {/* Вся сцена вздрагивает в момент тревоги */}
+      <div className={`relative z-10 mx-auto w-full max-w-md ${showAlarm ? 'shake' : ''}`}>
+        {/* Служебный лог камеры */}
+        {showLines && (
+          <div className="mb-8 space-y-1.5 font-mono text-[10px] leading-relaxed tracking-[0.14em] uppercase">
             {LINES.map((l) => (
               <p
                 key={l.text}
-                className="scanlines"
-                style={{
-                  opacity: 0,
-                  animation: `revealLine 0.5s var(--ease-slow) ${l.delay}ms forwards`,
-                }}
+                className={`signal-in ${l.corrupted ? 'glitch text-blood-bright' : 'text-ashlight'}`}
+                data-text={l.corrupted ?? l.text}
+                style={{ animationDelay: `${l.delay}ms` }}
               >
-                <span className="text-blood-bright">▸</span> {l.text}
+                <span className="text-blood-bright">▸</span> {l.corrupted ?? l.text}
               </p>
             ))}
-          </div>
-        )}
 
-        {phase === 'title' && (
-          <div className="anim-title">
-            <p className="mb-3 font-mono text-[10px] tracking-huge text-ashlight uppercase flicker">
-              Караганда · Хоррор-квест
+            {/* Строка, которая «печатается» и обрывается на полуслове */}
+            <p className="signal-in text-dust" style={{ animationDelay: '5400ms' }}>
+              <span className="text-blood-bright">▸</span> СВЯЗЬ С ОБЪЕКТОМ{' '}
+              <span className="caret-hard" />
             </p>
-            <h1 className="font-display text-[13vw] leading-[0.85] font-black tracking-[0.06em] text-bone text-shadow-hard sm:text-[9vw] lg:text-[7vw]">
-              ИНСОМНИЯ
-            </h1>
           </div>
         )}
 
-        {phase !== 'black' && (
-          <button
-            type="button"
-            onClick={() => {
-              timers.current.forEach(clearTimeout);
-              setPhase('done');
-            }}
-            className="mt-8 font-mono text-[10px] tracking-[0.2em] text-dust uppercase underline underline-offset-4 transition-colors hover:text-ashlight"
-          >
-            Пропустить
-          </button>
+        {/* Предупреждение перед названием */}
+        {showAlarm && (
+          <p className="signal-in mb-6 font-mono text-[11px] tracking-[0.2em] text-blood-bright uppercase">
+            ! Внимание: объект обнаружен
+          </p>
         )}
-      </div>
 
-      <style jsx global>{`
-        @keyframes revealLine {
-          from {
-            opacity: 0;
-            transform: translateX(-6px);
-            filter: blur(2px);
-          }
-          to {
-            opacity: 1;
-            transform: none;
-            filter: none;
-          }
-        }
-        .anim-title {
-          animation: titleIn 1.5s var(--ease-slow) both;
-        }
-        @keyframes titleIn {
-          from {
-            opacity: 0;
-            letter-spacing: 0.5em;
-            filter: blur(10px);
-          }
-          to {
-            opacity: 1;
-            letter-spacing: 0.06em;
-            filter: none;
-          }
-        }
-      `}</style>
+        {/* Название врывается на экран */}
+        {showTitle && (
+          <div>
+            <p className="title-slam mb-3 font-mono text-[10px] tracking-huge text-ashlight uppercase jitter">
+              {SUBTITLE}
+            </p>
+            <h1
+              className="title-slam glitch font-display text-[13vw] font-bold text-bone text-shadow-hard sm:text-[9vw] lg:text-[7vw]"
+              data-text={TITLE}
+              style={{ animationDelay: '120ms' }}
+            >
+              {TITLE}
+            </h1>
+            <p
+              className="signal-in mt-5 font-serif text-lg text-dust"
+              style={{ animationDelay: '700ms' }}
+            >
+              Дверь открыта. Входи.
+            </p>
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={finish}
+          className="mt-8 font-mono text-[10px] tracking-[0.2em] text-dust uppercase underline underline-offset-4 transition-colors hover:text-bone focus-visible:text-bone"
+        >
+          Пропустить заставку
+        </button>
+      </div>
     </div>
   );
 }

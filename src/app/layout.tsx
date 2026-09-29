@@ -1,17 +1,46 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, JetBrains_Mono } from 'next/font/google';
+import { Inter, JetBrains_Mono, Oswald, Playfair_Display } from 'next/font/google';
 import './globals.css';
 import { business, SITE_URL } from '@/data/business';
 
+/**
+ * Четыре шрифта — четыре роли.
+ *
+ * Oswald (сжатый гротеск)   — крупные заголовки. Узкие формы дают
+ *                             «плакатный» кинематографичный вид.
+ * Playfair Display (антиква)— акцентные фразы: создаёт контраст
+ *                             с техническим моно, как каптион в фильме.
+ * Inter                     — читаемые абзацы.
+ * JetBrains Mono            — только служебные надписи: метки камер,
+ *                             время, номера. Это визуальный код видеонаблюдения.
+ *
+ * Переменные называются --font-face-*, чтобы не пересекаться
+ * с одноимёнными ключами темы в globals.css.
+ */
+const oswald = Oswald({
+  subsets: ['latin', 'cyrillic'],
+  variable: '--font-face-display',
+  weight: ['500', '600', '700'],
+  display: 'swap',
+});
+
+const playfair = Playfair_Display({
+  subsets: ['latin', 'cyrillic'],
+  variable: '--font-face-serif',
+  weight: ['500', '700', '900'],
+  style: ['normal', 'italic'],
+  display: 'swap',
+});
+
 const inter = Inter({
   subsets: ['latin', 'cyrillic'],
-  variable: '--font-display',
+  variable: '--font-face-body',
   display: 'swap',
 });
 
 const mono = JetBrains_Mono({
   subsets: ['latin', 'cyrillic'],
-  variable: '--font-mono',
+  variable: '--font-face-mono',
   display: 'swap',
 });
 
@@ -115,7 +144,10 @@ const jsonLd = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ru" className={`${inter.variable} ${mono.variable}`}>
+    <html
+      lang="ru"
+      className={`${oswald.variable} ${playfair.variable} ${inter.variable} ${mono.variable}`}
+    >
       <body>
         <a
           href="#main"

@@ -18,8 +18,14 @@
   --color-blood-bright: #a81c1c;
   --color-ember: #b8452a;
 
-  --font-display: var(--font-display), 'Arial Narrow', sans-serif;
-  --font-mono: var(--font-mono), 'Courier New', monospace;
+  /* Шрифты подключаются в layout.tsx через next/font.
+     Имена переменных НЕ пересекаются с ключами темы ниже:
+     иначе получается самоссылка (--font-display: var(--font-display)),
+     которая делает значение невалидным. */
+  --font-display: var(--font-face-display), 'Arial Narrow', sans-serif;
+  --font-serif: var(--font-face-serif), Georgia, serif;
+  --font-body: var(--font-face-body), system-ui, sans-serif;
+  --font-mono: var(--font-face-mono), 'Courier New', monospace;
 }
 
 :root {
@@ -53,7 +59,9 @@ html {
 body {
   background-color: var(--color-void);
   color: var(--color-bone);
-  font-family: var(--font-mono);
+  /* Базовый шрифт — читаемый Inter. Моно используется точечно,
+     поэтому абзацы перестают выглядеть машинописным протоколом. */
+  font-family: var(--font-body);
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -94,11 +102,48 @@ body::after {
   outline-offset: 3px;
 }
 
-/* ---------- Типографика ---------- */
+/* ---------- Типографика ----------
+   Четыре роли, чтобы текст не выглядел одним моноширинным блоком:
+     .font-display — сжатый гротеск, крупные заголовки (Oswald)
+     .font-serif  — антиква с засечками, акцентные фразы (Playfair Display)
+     .font-body   — основной читаемый текст (Inter)
+     .font-mono   — технические надписи, эффект видеонаблюдения
+   ---------- */
 
 .font-display {
   font-family: var(--font-display);
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
+  /* Oswald — узкий гротеск, ему нужен воздух по вертикали */
+  line-height: 0.92;
+}
+
+.font-serif {
+  font-family: var(--font-serif);
+  letter-spacing: -0.01em;
+  font-style: italic;
+}
+
+.font-body {
+  font-family: var(--font-body);
+  letter-spacing: 0;
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+/* Заголовки крупного размера: Oswald упирается в кириллицу,
+   поэтому чуть увеличиваем межбуквенный интервал на больших кеглях. */
+.type-hero {
+  letter-spacing: 0.005em;
+  line-height: 0.88;
+}
+
+/* Тонкая кровяная обводка на светлом фоне — для акцентных слов */
+.text-outline-blood {
+  color: transparent;
+  -webkit-text-stroke: 1px var(--color-blood-bright);
+  text-shadow: 0 0 30px rgba(168, 28, 28, 0.25);
 }
 
 .tracking-huge {
@@ -268,4 +313,212 @@ body::after {
 .link-unfurl:hover,
 .link-unfurl:focus-visible {
   background-size: 100% 1px;
+}
+
+/* ============================================================
+   HORROR FX — эффекты заставки и атмосферных блоков.
+   Всё чисто на CSS: анимации не блокируют главный поток
+   и автоматически гасятся через prefers-reduced-motion.
+   ============================================================ */
+
+/* --- Глитч: текст «ломается» и собирается обратно --- */
+@keyframes glitch-x {
+  0%, 100% { transform: translateX(0); clip-path: inset(0 0 0 0); }
+  20% { transform: translateX(-3px); clip-path: inset(12% 0 62% 0); }
+  40% { transform: translateX(3px); clip-path: inset(58% 0 18% 0); }
+  60% { transform: translateX(-2px); clip-path: inset(34% 0 44% 0); }
+  80% { transform: translateX(2px); clip-path: inset(74% 0 6% 0); }
+}
+
+.glitch {
+  position: relative;
+  display: inline-block;
+  animation: glitch-x 2.4s steps(2, end) infinite;
+}
+
+/* Два «призрачных» слоя красного и бирюзового — расходятся в стороны,
+   как на дефектной видеоплёнке. */
+.glitch::before,
+.glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  /* Держим слои полупрозрачными: иначе цветные «призраки»
+     перекрашивают основной текст и он перестаёт читаться. */
+  opacity: 0.45;
+}
+
+.glitch::before {
+  color: var(--color-blood-bright);
+  animation: glitch-before 2.4s steps(2, end) infinite;
+}
+
+.glitch::after {
+  color: #2ad4d4;
+  animation: glitch-after 2.4s steps(2, end) infinite;
+}
+
+@keyframes glitch-before {
+  0%, 100% { transform: translate(0, 0); clip-path: inset(0 0 0 0); }
+  25% { transform: translate(-4px, 1px); clip-path: inset(18% 0 54% 0); }
+  50% { transform: translate(3px, -1px); clip-path: inset(64% 0 12% 0); }
+  75% { transform: translate(-2px, 0); clip-path: inset(30% 0 48% 0); }
+}
+
+@keyframes glitch-after {
+  0%, 100% { transform: translate(0, 0); clip-path: inset(0 0 0 0); }
+  25% { transform: translate(4px, -1px); clip-path: inset(52% 0 22% 0); }
+  50% { transform: translate(-3px, 1px); clip-path: inset(8% 0 68% 0); }
+  75% { transform: translate(2px, 0); clip-path: inset(70% 0 8% 0); }
+}
+
+/* --- Помехи: горизонтальные полосы, «срывающие» кадр --- */
+@keyframes tear {
+  0% { transform: translateY(-6%); opacity: 0; }
+  8% { opacity: 0.9; }
+  20% { transform: translateY(28%); opacity: 0.2; }
+  34% { transform: translateY(64%); opacity: 0.75; }
+  52% { transform: translateY(12%); opacity: 0.15; }
+  70% { transform: translateY(88%); opacity: 0.6; }
+  100% { transform: translateY(108%); opacity: 0; }
+}
+
+.tear-lines {
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 3px,
+    rgba(255, 255, 255, 0.05) 4px,
+    transparent 5px,
+    transparent 9px
+  );
+  animation: tear 5.5s linear infinite;
+}
+
+/* --- Тряска камеры: короткие, но ощутимые рывки --- */
+@keyframes shake {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-3px, 2px); }
+  20% { transform: translate(4px, -3px); }
+  30% { transform: translate(-5px, -1px); }
+  40% { transform: translate(3px, 4px); }
+  50% { transform: translate(-2px, 3px); }
+  60% { transform: translate(5px, -2px); }
+  70% { transform: translate(-4px, 1px); }
+  80% { transform: translate(2px, -4px); }
+  90% { transform: translate(-1px, 2px); }
+}
+
+.shake {
+  animation: shake 0.42s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+/* --- Резкая вспышка тревоги --- */
+@keyframes alarm-flash {
+  0% { opacity: 0; }
+  12% { opacity: 0.85; }
+  22% { opacity: 0.12; }
+  34% { opacity: 0.6; }
+  48% { opacity: 0; }
+  100% { opacity: 0; }
+}
+
+.alarm-flash {
+  animation: alarm-flash 1.15s ease-out both;
+}
+
+/* --- Пульсация «дыхания» тревоги --- */
+@keyframes dread-pulse {
+  0%, 100% { opacity: 0.28; }
+  50% { opacity: 0.85; }
+}
+
+.dread-pulse {
+  animation: dread-pulse 2.6s ease-in-out infinite;
+}
+
+/* --- Строка, которая «печатается» и зависает на курсоре --- */
+@keyframes caret-blink-hard {
+  0%, 48% { opacity: 1; }
+  49%, 100% { opacity: 0; }
+}
+
+.caret-hard::after {
+  content: '_';
+  color: var(--color-blood-bright);
+  animation: caret-blink-hard 0.75s steps(1, end) infinite;
+}
+
+/* --- Входящий кадр: текст «проявляется» из темноты с дрожью --- */
+@keyframes signal-in {
+  0% { opacity: 0; transform: translateY(10px); filter: blur(7px); }
+  30% { opacity: 1; }
+  45% { opacity: 0.35; transform: translateX(4px); }
+  60% { opacity: 1; transform: translateX(-2px); filter: blur(0); }
+  100% { opacity: 1; transform: none; filter: none; }
+}
+
+.signal-in {
+  animation: signal-in 0.7s var(--ease-slow) both;
+}
+
+/* --- Название выезжает с хрустом --- */
+@keyframes title-slam {
+  0% { opacity: 0; letter-spacing: 0.55em; filter: blur(16px); transform: scale(1.06); }
+  55% { opacity: 1; letter-spacing: 0.02em; filter: blur(0); transform: scale(1); }
+  70% { opacity: 0.5; transform: translateX(-5px); }
+  85% { opacity: 1; transform: translateX(0); }
+  100% { opacity: 1; letter-spacing: 0.01em; }
+}
+
+.title-slam {
+  animation: title-slam 1.5s var(--ease-slow) both;
+}
+
+/* --- Дрожащий мелкий текст (эффект плохой связи) --- */
+@keyframes jitter {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(0.5px, -0.5px); }
+  50% { transform: translate(-0.5px, 0.5px); }
+  75% { transform: translate(0.5px, 0.5px); }
+}
+
+.jitter {
+  animation: jitter 0.22s steps(2, end) infinite;
+}
+
+/* --- Виньетка, сжимающаяся вокруг зрителя --- */
+@keyframes vignette-close {
+  0% { opacity: 0.55; }
+  55% { opacity: 0.95; }
+  100% { opacity: 0.6; }
+}
+
+.vignette-close {
+  animation: vignette-close 3.2s ease-in-out infinite;
+}
+
+/* Аккуратное отключение всей horror-графики для тех,
+   кто включил «уменьшить движение» в системе. */
+@media (prefers-reduced-motion: reduce) {
+  .glitch,
+  .glitch::before,
+  .glitch::after,
+  .tear-lines,
+  .shake,
+  .alarm-flash,
+  .dread-pulse,
+  .caret-hard::after,
+  .signal-in,
+  .title-slam,
+  .jitter,
+  .vignette-close,
+  .flicker {
+    animation: none !important;
+  }
+  .glitch::before,
+  .glitch::after {
+    display: none;
+  }
 }

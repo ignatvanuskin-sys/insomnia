@@ -9,8 +9,10 @@ next-env.d.ts
 qa
 qa2
 qa3
-qa3
 *.log
 *.err
 qa-*.js
 scrape.js
+tsconfig.tsbuildinfo
+.vercel
+.env*

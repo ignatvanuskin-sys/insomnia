@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 import { getQuest } from '@/data/business';
 import { appendBooking } from '@/lib/bookings';
+import { canonicalPhone, isCompletePhone } from '@/lib/phone';
 
 export const runtime = 'nodejs';
 
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
-const PHONE_RE = /^\+?[0-9\s\-()]{10,20}$/;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 function clean(v: unknown, max: number): string {
@@ -29,7 +29,9 @@ export async function POST(request: Request) {
   const time = clean(payload.time, 5);
   const players = Number(payload.players);
   const name = clean(payload.name, 80);
-  const phone = clean(payload.phone, 20);
+  // Телефон приводится к каноническому виду теми же правилами, что и в форме:
+  // сервер не доверяет клиенту и не хранит строку как есть.
+  const phone = canonicalPhone(clean(payload.phone, 24));
 
   const errors: Record<string, string> = {};
 
@@ -40,7 +42,8 @@ export async function POST(request: Request) {
   if (!Number.isInteger(players) || players < 1 || players > 30)
     errors.players = 'Укажите количество игроков от 1 до 30.';
   if (name.length < 2) errors.name = 'Введите имя.';
-  if (!PHONE_RE.test(phone)) errors.phone = 'Укажите телефон для связи.';
+  if (!isCompletePhone(phone))
+    errors.phone = 'Укажите номер целиком — 11 цифр, например +7 700 000 00 00.';
 
   if (Object.keys(errors).length > 0) {
     return NextResponse.json(

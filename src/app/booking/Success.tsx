@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { business, getQuest } from '@/data/business';
 import Header from '@/components/Header';
+import { formatPhone } from '@/lib/phone';
 import { fmtDate, type Form } from './data';
 
 export default function Success({ form, onShare }: { form: Form; onShare: () => void }) {
@@ -29,7 +30,9 @@ export default function Success({ form, onShare }: { form: Form; onShare: () => 
     'END:VCALENDAR',
   ].join('\r\n');
 
-  const MAPS_URL = `https://yandex.ru/maps/?pt=${business.coords.lon},${business.coords.lat}&z=17&l=map`;
+  // 2ГИС, а не Яндекс: вся картография сайта и карточка заведения — в 2ГИС,
+  // и человек, у которого уже открыт 2ГИС, не должен попадать в другую систему.
+  const MAPS_URL = `https://2gis.kz/karaganda/route/${business.coords.lon},${business.coords.lat}`;
 
   return (
     <div className="min-h-dvh pb-16">
@@ -57,9 +60,9 @@ export default function Success({ form, onShare }: { form: Form; onShare: () => 
               { l: 'Дата', v: `${d} (${wd})` },
               { l: 'Время', v: form.time },
               { l: 'Игроки', v: String(form.players) },
-              { l: 'Стоимость', v: 'Уточните у администратора' },
+              { l: 'Стоимость', v: q?.price ?? 'Уточните у администратора' },
               { l: 'Имя', v: form.name },
-              { l: 'Телефон', v: form.phone },
+              { l: 'Телефон', v: formatPhone(form.phone) },
               { l: 'Адрес', v: `${business.addressShort}, Караганда` },
             ].map((r) => (
               <div key={r.l} className="flex items-baseline justify-between gap-4 px-5 py-3">

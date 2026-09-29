@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -6,6 +7,13 @@ import CctvStamp from '@/components/CctvStamp';
 import RevealOnScroll from '@/components/RevealOnScroll';
 import StickyCta from '@/components/StickyCta';
 import { business, quests } from '@/data/business';
+import { threat, enterHint } from '@/data/copy';
+import { heroPhoto, photoFocus, photoHref, questPhotos } from '@/data/photos';
+import Flashlight from '@/components/Flashlight';
+import CountUp from '@/components/CountUp';
+import DotMatrix from '@/components/DotMatrix';
+import Sigil from '@/components/Sigil';
+import Watcher from '@/components/Watcher';
 import HowItWorks from '@/components/HowItWorks';
 import Reviews from '@/components/Reviews';
 import Faq from '@/components/Faq';
@@ -23,6 +31,28 @@ export default function Home() {
       <main id="main" className="pt-14 pb-16 sm:pt-16 sm:pb-0">
         {/* ============ HERO ============ */}
         <section className="relative flex min-h-[92svh] items-center overflow-hidden">
+          {/* Кадр с камеры наблюдения — фон первого экрана.
+              Тот же приём, что и в галерее: обесцвечивание, контраст
+              и развёртка превращают фотографию в запись с камеры. */}
+          <div className="absolute inset-0" aria-hidden>
+            <span className="cctv block h-full w-full">
+              {/* Качество 55 вместо 68: кадр проходит через grayscale,
+                  контраст и виньетку, поэтому разница в артефактах не
+                  читается, а вес LCP-картинки падает примерно вдвое
+                  (на телефоне это ~122 → ~65 КБ). */}
+              <Image
+                src={photoHref(heroPhoto)}
+                alt=""
+                fill
+                priority
+                sizes="100vw"
+                quality={55}
+                className="object-cover"
+                style={{ objectPosition: photoFocus(heroPhoto) }}
+              />
+            </span>
+          </div>
+
           {/* Медленно плывущие световые пятна — глубина вместо плоского фона */}
           <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
             <span className="orb orb-1" />
@@ -31,7 +61,7 @@ export default function Home() {
           </div>
           <div className="light-leak absolute inset-0" aria-hidden />
           <div
-            className="absolute inset-0 opacity-[0.55]"
+            className="absolute inset-0 opacity-[0.36]"
             aria-hidden
             style={{
               backgroundImage:
@@ -39,6 +69,10 @@ export default function Home() {
             }}
           />
           <div className="scanlines absolute inset-0" aria-hidden />
+
+          {/* Фонарик: тьма расходится вокруг курсора. На тач-экране
+              и при reduced-motion компонент не создаёт слой вовсе. */}
+          <Flashlight />
 
           <div className="relative z-10 mx-auto w-full max-w-6xl px-4 py-20 sm:px-6 sm:py-28">
             <div className="max-w-2xl">
@@ -79,6 +113,10 @@ export default function Home() {
                   Смотреть квесты
                 </a>
               </div>
+
+              <p className="anim-hero-6 mt-5 max-w-md font-mono text-[11px] leading-relaxed text-dust/80">
+                {enterHint}
+              </p>
             </div>
           </div>
 
@@ -99,18 +137,18 @@ export default function Home() {
                 <p className="font-mono text-[9px] tracking-[0.2em] text-dust uppercase">
                   Рейтинг 2ГИС
                 </p>
-                <p className="mt-2 font-display text-4xl font-black text-bone">
-                  {business.rating.toFixed(1)}
+                <p className="mt-2 font-display text-4xl font-black text-bone tabular-nums">
+                  <CountUp to={business.rating} decimals={1} />
                   <span className="ml-1 text-lg text-blood-bright">★</span>
                 </p>
                 <p className="mt-1 font-mono text-[10px] text-dust">
-                  {business.ratingsCount} оценок
+                  <CountUp to={business.ratingsCount} /> оценок
                 </p>
               </div>
               <div>
                 <p className="font-mono text-[9px] tracking-[0.2em] text-dust uppercase">Отзывы</p>
-                <p className="mt-2 font-display text-4xl font-black text-bone">
-                  {business.reviewsCount}
+                <p className="mt-2 font-display text-4xl font-black text-bone tabular-nums">
+                  <CountUp to={business.reviewsCount} />
                 </p>
                 <p className="mt-1 font-mono text-[10px] text-dust">
                   на{' '}
@@ -154,24 +192,17 @@ export default function Home() {
                 <br />
                 Ты — внутри.
               </h2>
-              <div className="rule-blood mt-8" />
+              <Sigil className="mt-8" />
             </div>
 
             <div className="reveal mt-12 grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
-              {[
-                { t: 'Вы', d: 'Команда, которая решает выйти.' },
-                { t: 'Пространство', d: 'Замкнуто. Обратной дороги нет.' },
-                { t: 'История', d: 'Уже происходила. Без вас.' },
-                { t: 'Решения', d: 'Ваши. И они имеют вес.' },
-                { t: 'Страх', d: 'Не эффект, а состояние.' },
-                { t: 'Тишина', d: 'Работает громче крика.' },
-              ].map((b) => (
-                <div key={b.t} className="border-t border-iron pt-4">
-                  <h3 className="font-display text-base font-bold tracking-[0.1em] text-bone">
-                    {b.t}
-                  </h3>
-                  <p className="mt-2 font-mono text-[12px] leading-relaxed text-dust">{b.d}</p>
-                </div>
+              {threat.map((t) => (
+                <p
+                  key={t}
+                  className="border-t border-iron pt-4 font-mono text-[12px] leading-relaxed text-dust"
+                >
+                  {t}
+                </p>
               ))}
             </div>
           </div>
@@ -204,21 +235,27 @@ export default function Home() {
                     className="relative h-44 overflow-hidden border-b border-iron sm:h-56"
                     aria-hidden
                   >
-                    <div
-                      className="absolute inset-0 transition-transform duration-[1.2s] ease-out group-hover:scale-[1.04]"
-                      style={{
-                        backgroundImage: [
-                          'radial-gradient(ellipse 70% 90% at 30% 25%, #1d1518 0%, transparent 60%)',
-                          'radial-gradient(ellipse 60% 70% at 78% 78%, #1a1412 0%, transparent 62%)',
-                          'linear-gradient(160deg, #0e0e11 0%, #070708 100%)',
-                        ].join(','),
-                      }}
-                    />
-                    <div className="scanlines absolute inset-0" />
-                    <span className="absolute top-4 left-4 font-mono text-[10px] tracking-[0.2em] text-dust uppercase">
+                    <div className="absolute inset-0 transition-transform duration-[1.2s] ease-out group-hover:scale-[1.04]">
+                      <span className="cctv block h-full w-full">
+                        <Image
+                          src={photoHref(questPhotos[q.slug] ?? heroPhoto)}
+                          alt=""
+                          fill
+                          sizes="(max-width: 768px) 100vw, 50vw"
+                          quality={70}
+                          className="object-cover"
+                          /* Карточка широкая (~2.4:1), кадр вертикальный:
+                             берём яркую верхнюю полосу, а не середину. */
+                          style={{
+                            objectPosition: photoFocus(questPhotos[q.slug] ?? heroPhoto),
+                          }}
+                        />
+                      </span>
+                    </div>
+                    <span className="absolute top-4 left-4 z-[5] font-mono text-[10px] tracking-[0.2em] text-bone/80 uppercase">
                       CAM 0{i + 4}
                     </span>
-                    <span className="absolute right-4 bottom-4 font-mono text-[10px] tracking-[0.2em] text-dust uppercase tabular-nums">
+                    <span className="absolute right-4 bottom-4 z-[5] font-mono text-[10px] tracking-[0.2em] text-blood-bright/90 uppercase tabular-nums">
                       REC ●
                     </span>
                   </div>
@@ -255,6 +292,12 @@ export default function Home() {
                       ))}
                     </dl>
 
+                    {q.priceNote ? (
+                      <p className="mt-3 font-mono text-[10px] leading-relaxed text-dust/80">
+                        {q.priceNote}
+                      </p>
+                    ) : null}
+
                     <div className="mt-auto flex flex-col gap-2.5 pt-6 sm:flex-row">
                       <Link
                         href={`/quests/${q.slug}`}
@@ -275,9 +318,72 @@ export default function Home() {
             </div>
 
             <p className="reveal mt-6 font-body text-[13px] leading-relaxed text-dust">
-              Количество игроков, длительность, возраст и стоимость уточните у администратора —
-              мы не публикуем цифры, которые не можем подтвердить.
+              Цена «Забытых душ» — из{' '}
+              <a
+                href={business.twoGisPricesUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blood-bright underline underline-offset-2"
+              >
+                прайс-листа 2ГИС от {business.priceListUpdatedAt}
+              </a>
+              . Количество игроков, длительность, возраст и стоимость INSOMNIA CINEMA
+              уточните у администратора — мы не публикуем цифры, которые не можем
+              подтвердить.
             </p>
+          </div>
+        </section>
+
+        {/* ============ КАДР ИЗ АРХИВА — передышка-испуг между секциями ============
+            Тот же механизм фонарика, но здесь он не украшение: пока курсор
+            не пройдёт по кадру, фотографию почти не видно. */}
+        <section className="relative flex min-h-[74svh] items-end overflow-hidden border-y border-iron">
+          <div className="absolute inset-0" aria-hidden>
+            <span className="cctv block h-full w-full">
+              <Image
+                src={photoHref('16.jpg')}
+                alt=""
+                fill
+                sizes="100vw"
+                quality={60}
+                className="object-cover"
+                style={{ objectPosition: photoFocus('16.jpg') }}
+              />
+            </span>
+          </div>
+          <div className="light-leak absolute inset-0" aria-hidden />
+          <div className="scanlines absolute inset-0" aria-hidden />
+          <Flashlight />
+
+          {/* Индикатор прибора — в углу кадра, а не рядом с кнопкой:
+              в потоке он читался как вторая, «сломанная» кнопка (это
+              отметил визуальный QA). */}
+          <DotMatrix
+            className="pointer-events-none absolute top-6 right-6 z-10 w-20 opacity-70 sm:top-10 sm:right-10 sm:w-28"
+            cols={9}
+            rows={3}
+            k={-0.045}
+          />
+
+          <div className="relative z-10 mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
+            <p className="reveal font-mono text-[10px] tracking-huge text-blood-bright uppercase">
+              CAM 09 · кадр из архива
+            </p>
+            <h2 className="reveal mt-5 max-w-lg font-display text-3xl leading-[1.02] font-black tracking-wide text-bone text-shadow-hard sm:text-5xl">
+              Не всякий кадр из архива стоит рассматривать долго.
+            </h2>
+            <p className="reveal mt-5 max-w-md font-mono text-[12px] leading-relaxed text-ashlight">
+              Свет идёт за курсором. Всё, что остаётся за кругом, вы не увидите —
+              и в этом есть своя выгода.
+            </p>
+            <div className="reveal mt-8">
+              <Link
+                href="/booking"
+                className="inline-block border border-blood/70 bg-blood/15 px-8 py-4 font-mono text-[12px] tracking-[0.2em] text-bone uppercase transition-all hover:border-blood-bright hover:bg-blood/30"
+              >
+                Войти
+              </Link>
+            </div>
           </div>
         </section>
 
@@ -297,6 +403,8 @@ export default function Home() {
           <div className="light-leak absolute inset-0" aria-hidden />
           <div className="scanlines absolute inset-0" aria-hidden />
           <div className="relative z-10 mx-auto max-w-3xl px-4 text-center sm:px-6">
+            {/* Взгляд из темноты: зрачки идут за курсором. */}
+            <Watcher className="reveal mx-auto mb-10 h-10 w-36 opacity-80" />
             <p className="reveal font-mono text-[10px] tracking-huge text-dust uppercase">
               Дверь открыта
             </p>

@@ -1,10 +1,11 @@
-import { business } from '@/data/business';
+import { business, reviews } from '@/data/business';
 
 /**
  * Социальное доказательство.
- * Мы публикуем ТОЛЬКО подтверждённые данные 2ГИС (рейтинг и количество).
- * Тексты отзывов скрыты антибот-защитой 2ГИС — выдумывать цитаты нельзя,
- * поэтому блок ведёт в реальный раздел отзывов.
+ * Публикуем агрегаты 2ГИС (рейтинг, количество) и реальные цитаты из вкладки
+ * «Отзывы» — без правок текста: сокращения помечены многоточием.
+ * Отзывы без текста и с бранью в выборку не попали, поэтому здесь восемь
+ * цитат, а не все сто тридцать два отзыва.
  */
 export default function Reviews() {
   return (
@@ -23,7 +24,8 @@ export default function Reviews() {
             </h2>
             <p className="mt-4 font-mono text-[12px] leading-relaxed text-dust">
               {business.ratingsCount} оценок и {business.reviewsCount} отзывов на 2ГИС. Это
-              единственный источник, который мы используем — без выдуманных цитат.
+              единственный источник, который мы используем — цитаты ниже взяты из него
+              и не переписаны.
             </p>
             <a
               href={business.twoGisReviewsUrl}
@@ -45,7 +47,7 @@ export default function Reviews() {
               {
                 t: 'Отзывы',
                 v: `${business.reviewsCount}`,
-                n: 'с текстом и оценкой',
+                n: `${business.reviewsShown} отображаются в списке 2ГИС`,
               },
               {
                 t: 'Статус',
@@ -65,12 +67,36 @@ export default function Reviews() {
             ))}
             <div className="bg-ash p-6 sm:p-7">
               <p className="font-mono text-[11px] leading-relaxed text-dust">
-                Тексты отзывов мы не дублируем здесь: их публикует 2ГИС, и там же они
-                обновляются. Кнопка выше ведёт к актуальным отзывам.
+                Каждый отзыв ниже помечен в 2ГИС как подтверждённый оплатой,
+                посещением или бронированием. Стиль авторов сохранён намеренно.
               </p>
             </div>
           </div>
         </div>
+
+        {/* Цитаты */}
+        <div className="reveal mt-10 grid gap-px border border-iron bg-iron sm:grid-cols-2">
+          {reviews.map((r) => (
+            <figure key={`${r.author}-${r.date}`} className="flex flex-col bg-ash p-6 sm:p-7">
+              <blockquote className="font-mono text-[12px] leading-relaxed text-ashlight">
+                {r.text}
+              </blockquote>
+              <figcaption className="mt-auto flex flex-wrap items-baseline gap-x-3 gap-y-1 pt-5 font-mono text-[10px] text-dust">
+                <span className="text-bone">{r.author}</span>
+                <span>{r.date}</span>
+                <span className="text-dust/70">{r.visits}</span>
+                <span className="text-blood-bright/80">Отзыв подтверждён</span>
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+
+        <p className="reveal mt-6 font-mono text-[11px] leading-relaxed text-dust">
+          Показаны восемь цитат из {business.reviewsCount}. Отзывы без текста
+          (только оценка), отзывы с оскорблениями и спам в выборку не включены —
+          агрегатный рейтинг на это не влияет, он берётся из карточки целиком.
+          Остальное — по ссылке выше.
+        </p>
       </div>
     </section>
   );

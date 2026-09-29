@@ -179,7 +179,7 @@ body::after {
 }
 
 .flicker {
-  animation: flicker 5.5s infinite;
+  animation: flicker 3.6s infinite;
 }
 
 @keyframes flicker {
@@ -194,10 +194,10 @@ body::after {
 
 .reveal {
   opacity: 0;
-  transform: translateY(18px);
+  transform: translateY(14px);
   transition:
-    opacity 0.9s var(--ease-slow),
-    transform 0.9s var(--ease-slow);
+    opacity 0.45s var(--ease-slow),
+    transform 0.45s var(--ease-slow);
 }
 
 .reveal.is-visible {
@@ -281,18 +281,24 @@ body::after {
   }
 }
 
-.anim-hero { animation: heroIn 1.1s var(--ease-slow) 0.25s both; }
-.anim-hero-2 { animation: heroIn 1.3s var(--ease-slow) 0.55s both; }
-.anim-hero-3 { animation: heroIn 1.2s var(--ease-slow) 0.95s both; }
-.anim-hero-4 { animation: heroIn 1.2s var(--ease-slow) 1.2s both; }
-.anim-hero-5 { animation: heroIn 1.2s var(--ease-slow) 1.45s both; }
+/* Тайминги сжаты: первый экран собирается за ~1 с, а не за 2.8 с.
+   Раньше последний элемент появлялся на 2.8-й секунде — на телефоне это
+   читалось как «сайт всё ещё грузится». Тот же приём (blur + сдвиг),
+   просто втрое короче; суммарная задержка последнего блока — 0.44 с. */
+.anim-hero { animation: heroIn 0.62s var(--ease-slow) 0.04s both; }
+.anim-hero-2 { animation: heroIn 0.72s var(--ease-slow) 0.12s both; }
+.anim-hero-3 { animation: heroIn 0.66s var(--ease-slow) 0.22s both; }
+.anim-hero-4 { animation: heroIn 0.62s var(--ease-slow) 0.3s both; }
+.anim-hero-5 { animation: heroIn 0.62s var(--ease-slow) 0.38s both; }
+.anim-hero-6 { animation: heroIn 0.62s var(--ease-slow) 0.44s both; }
 
 @media (prefers-reduced-motion: reduce) {
   .anim-hero,
   .anim-hero-2,
   .anim-hero-3,
   .anim-hero-4,
-  .anim-hero-5 {
+  .anim-hero-5,
+  .anim-hero-6 {
     animation: none;
     opacity: 1;
     filter: none;
@@ -375,7 +381,7 @@ body::after {
 .beam-border:hover::before,
 .beam-border:focus-within::before {
   opacity: 1;
-  animation: beam-run 2.6s linear infinite;
+  animation: beam-run 1.8s linear infinite;
 }
 
 .beam-border:hover::after,
@@ -487,7 +493,7 @@ body::after {
 .glitch {
   position: relative;
   display: inline-block;
-  animation: glitch-x 4.5s steps(1, end) infinite;
+  animation: glitch-x 3.2s steps(1, end) infinite;
 }
 
 /* Два «призрачных» слоя красного и бирюзового — расходятся в стороны,
@@ -498,19 +504,24 @@ body::after {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  /* Держим слои полупрозрачными: иначе цветные «призраки»
-     перекрашивают основной текст и он перестаёт читаться. */
+   /* Держим слои полупрозрачными: иначе цветные «призраки»
+      перекрашивают основной текст и он перестаёт читаться. */
   opacity: 0.45;
+  /* z-index: -1 — вторая половина того же решения, без неё оно не работало.
+     «Призраки» лежали ПОВЕРХ текста, поэтому даже при opacity 0.45 заголовок
+     в заставке читался бирюзовым, а красная строка журнала — бурой. Теперь
+     цветные копии уходят ПОД буквы и видны как сдвинутые кромки. */
+  z-index: -1;
 }
 
 .glitch::before {
   color: var(--color-blood-bright);
-  animation: glitch-before 4.5s steps(1, end) infinite;
+  animation: glitch-before 3.2s steps(1, end) infinite;
 }
 
 .glitch::after {
   color: #2ad4d4;
-  animation: glitch-after 4.5s steps(1, end) infinite;
+  animation: glitch-after 3.2s steps(1, end) infinite;
 }
 
 /* Призрачные слои повторяют ритм основного глитча: тот же цикл 4.5s
@@ -551,7 +562,7 @@ body::after {
     transparent 5px,
     transparent 9px
   );
-  animation: tear 5.5s linear infinite;
+  animation: tear 3.4s linear infinite;
 }
 
 /* --- Тряска камеры: короткие, но ощутимые рывки --- */
@@ -572,18 +583,41 @@ body::after {
   animation: shake 0.42s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
 
-/* --- Резкая вспышка тревоги --- */
+/* Рывок камеры в момент тревоги.
+   Отличие от .shake: короче (0.34 с) и вдвое шире по амплитуде. Медленная
+   тряска на 0.42 с читалась как «дрожит страница», а не как удар по кадру.
+   Частота сохранена безопасной: два рывка за 0.34 с — это не мигание. */
+@keyframes shake-hard {
+  0%, 100% { transform: translate(0, 0); }
+  8% { transform: translate(-7px, 4px); }
+  18% { transform: translate(8px, -5px); }
+  28% { transform: translate(-9px, -3px); }
+  38% { transform: translate(7px, 6px); }
+  50% { transform: translate(-5px, 5px); }
+  62% { transform: translate(9px, -4px); }
+  74% { transform: translate(-7px, 3px); }
+  86% { transform: translate(4px, -6px); }
+}
+
+.shake-hard {
+  animation: shake-hard 0.34s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+/* --- Резкая вспышка тревоги ---
+   Была 1.15 с в четыре «моргания» — два из них приходились на 0.35 с,
+   то есть около 3 Гц. Это уже зона риска по WCAG 2.3.1 (не более трёх
+   вспышек в секунду). Оставлены две вспышки за 0.5 с — читается резче
+   и не превращается в строб. */
 @keyframes alarm-flash {
   0% { opacity: 0; }
-  12% { opacity: 0.85; }
-  22% { opacity: 0.12; }
-  34% { opacity: 0.6; }
-  48% { opacity: 0; }
+  9% { opacity: 0.92; }
+  26% { opacity: 0.08; }
+  40% { opacity: 0.72; }
   100% { opacity: 0; }
 }
 
 .alarm-flash {
-  animation: alarm-flash 1.15s ease-out both;
+  animation: alarm-flash 0.5s ease-out both;
 }
 
 /* --- Пульсация «дыхания» тревоги --- */
@@ -618,7 +652,7 @@ body::after {
 }
 
 .signal-in {
-  animation: signal-in 0.7s var(--ease-slow) both;
+  animation: signal-in 0.34s var(--ease-slow) both;
 }
 
 /* --- Название выезжает с хрустом --- */
@@ -631,7 +665,7 @@ body::after {
 }
 
 .title-slam {
-  animation: title-slam 1.5s var(--ease-slow) both;
+  animation: title-slam 0.62s var(--ease-slow) both;
 }
 
 /* --- Дрожащий мелкий текст (эффект плохой связи) --- */
@@ -643,7 +677,7 @@ body::after {
 }
 
 .jitter {
-  animation: jitter 0.22s steps(2, end) infinite;
+  animation: jitter 0.16s steps(2, end) infinite;
 }
 
 /* --- Виньетка, сжимающаяся вокруг зрителя --- */
@@ -654,8 +688,124 @@ body::after {
 }
 
 .vignette-close {
-  animation: vignette-close 3.2s ease-in-out infinite;
+  animation: vignette-close 1.8s ease-in-out infinite;
 }
+
+/* ============================================================
+   HORROR SCENES — анимации процедурных SVG-сцен (HorrorScene).
+   ============================================================ */
+
+.hs-breathe {
+  animation: hs-breathe 3.2s ease-in-out infinite;
+}
+@keyframes hs-breathe {
+  0%, 100% { opacity: 0.9; }
+  50% { opacity: 1; }
+}
+
+.hs-blink {
+  animation: hs-blink 4.6s steps(1, end) infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+/* Глаза открыты почти всегда и моргают редко и быстро —
+   именно этот редкий морг читается как «наблюдение». */
+@keyframes hs-blink {
+  0%, 91%, 100% { transform: scaleY(1); }
+  93% { transform: scaleY(0.08); }
+  95% { transform: scaleY(1); }
+}
+
+.hs-grain {
+  animation: hs-grain 0.3s steps(3, end) infinite;
+}
+@keyframes hs-grain {
+  0% { transform: translate(0, 0); }
+  33% { transform: translate(-2%, 1%); }
+  66% { transform: translate(2%, -1%); }
+  100% { transform: translate(0, 0); }
+}
+
+.hs-tear {
+  animation: hs-tear 2.4s linear infinite;
+}
+.hs-tear--late {
+  animation-delay: -1.2s;
+}
+@keyframes hs-tear {
+  0% { transform: translateY(-40px); opacity: 0; }
+  12% { opacity: 0.8; }
+  45% { transform: translateY(90px); opacity: 0.1; }
+  78% { transform: translateY(150px); opacity: 0.5; }
+  100% { transform: translateY(200px); opacity: 0; }
+}
+
+/* ============================================================
+   SCARE — короткий скример по кнопке (Scare.tsx).
+   Никаких быстрых вспышек: 560 мс, три слоя, без звука.
+   ============================================================ */
+
+.scare-flash {
+  position: absolute;
+  inset: 0;
+  /* Без красного: яркий красный отсвет поверх лица превращал его
+     в мультяшную маску. Теперь кадр просто уходит в темноту. */
+  background: radial-gradient(ellipse at center, rgba(40, 12, 12, 0.85), #000 80%);
+  animation: scare-flash 0.56s ease-out both;
+}
+@keyframes scare-flash {
+  0% { opacity: 0; }
+  6% { opacity: 1; }
+  18% { opacity: 0.25; }
+  34% { opacity: 0.9; }
+  100% { opacity: 0; }
+}
+
+/* Сцена фиксирует размер: без неё preserveAspectRatio="slice"
+   растягивал лицо сцены на весь экран. */
+.scare-stage {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scare-face {
+  height: 55vh;
+  max-height: 520px;
+  width: auto;
+  animation: scare-face 0.56s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+  filter: blur(0.4px);
+}
+@keyframes scare-face {
+  0% { opacity: 0; transform: scale(1.5) translateY(6%); }
+  10% { opacity: 1; transform: scale(1) translateY(0); }
+  22% { transform: scale(1.03) translateX(-1.5%); }
+  30% { transform: scale(1) translateX(0); }
+  70% { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.06); }
+}
+
+.scare-static {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.08) 0px,
+    rgba(255, 255, 255, 0.08) 1px,
+    transparent 2px,
+    transparent 5px
+  );
+  animation: scare-static 0.56s steps(4, end) both;
+}
+@keyframes scare-static {
+  0% { opacity: 0; }
+  8% { opacity: 1; }
+  40% { opacity: 0.6; }
+  100% { opacity: 0; }
+}
+
 
 /* Аккуратное отключение всей horror-графики для тех,
    кто включил «уменьшить движение» в системе. */
@@ -672,11 +822,415 @@ body::after {
   .title-slam,
   .jitter,
   .vignette-close,
-  .flicker {
+  .flicker,
+  .hs-breathe,
+  .hs-blink,
+  .hs-grain,
+  .hs-tear,
+  .scare-flash,
+  .scare-face,
+  .scare-static {
     animation: none !important;
   }
   .glitch::before,
   .glitch::after {
     display: none;
   }
+}
+
+/* ============================================================
+   ЖИВОЕ ЗЕРНО — фон «дышит» зерном, а не стоит картинкой.
+   Приём из подборки (films grain + steps): сдвиг текстуры всего
+   в 3 позиции и шагом steps(1) — глаз читает это как шум плёнки,
+   а не как анимацию. Стоит ноль JS.
+   ============================================================ */
+
+@keyframes grain-shift {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(-1.5%, 1%); }
+  50% { transform: translate(1%, -1.5%); }
+  75% { transform: translate(-1%, -1%); }
+  100% { transform: translate(0, 0); }
+}
+
+body::before {
+  /* Слой увеличен на 4% с каждой стороны: при сдвиге по краям
+     не появляется полоса без зерна. */
+  inset: -4%;
+  animation: grain-shift 0.7s steps(1) infinite;
+  will-change: transform;
+}
+
+/* Виньетка «сжимается» очень медленно и почти незаметно — кадр
+   будто постепенно сужается, но поймать момент нельзя. */
+@keyframes vignette-breathe {
+  0%, 100% { opacity: 0.86; }
+  50% { opacity: 1; }
+}
+
+body::after {
+  animation: vignette-breathe 9s ease-in-out infinite;
+}
+
+/* ============================================================
+   ФОТОСЛОЙ — реальные кадры под «камеру наблюдения».
+   Обычный цветной снимок локации выглядит как отзыв в соцсети.
+   Тот же снимок в обесцвечивании, с контрастом, красным сдвигом
+   и сеткой развёртки читается как запись с камеры — а это уже
+   улика, а не реклама.
+   ============================================================ */
+
+.cctv {
+  position: relative;
+  overflow: hidden;
+  background: #000;
+  isolation: isolate;
+}
+
+/* Яркость держим около 0.9, а не 0.6. При 0.62 самые тёмные кадры локации
+   («красный неон») схлопывались в сплошной чёрный прямоугольник — это
+   поймал визуальный QA. Темноту даёт не этот фильтр, а виньетка и
+   фонарик сверху; дополнительно выкручивать яркость в ноль незачем. */
+.cctv img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(0.72) contrast(1.14) brightness(0.9) sepia(0.16) hue-rotate(-14deg);
+  transform: scale(1.03);
+  transition:
+    transform 1.2s var(--ease-slow),
+    filter 0.5s ease;
+}
+
+.cctv:hover img,
+.cctv:focus-within img {
+  filter: grayscale(0.38) contrast(1.22) brightness(1.06) sepia(0.2) hue-rotate(-16deg);
+  transform: scale(1.07);
+}
+
+/* Развёртка + красный «хвост» записи поверх снимка */
+.cctv::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0) 0px,
+      rgba(0, 0, 0, 0) 2px,
+      rgba(0, 0, 0, 0.34) 3px,
+      rgba(0, 0, 0, 0) 4px
+    ),
+    radial-gradient(ellipse at 50% 45%, transparent 30%, rgba(0, 0, 0, 0.55) 78%, rgba(0, 0, 0, 0.85) 100%);
+  mix-blend-mode: multiply;
+  z-index: 3;
+}
+
+/* ============================================================
+   ФОНАРИК — тьма, которая расходится вокруг курсора.
+   Приём из подборки (flashlight mask cursor): чёрный слой с
+   прозрачным отверстием; координаты приходят из JS с задержкой,
+   поэтому свет «догоняет» руку и это читается как живое пятно.
+   Только для точного указателя: на тач-устройстве фонарик
+   выключен, иначе он превращается в помеху.
+   ============================================================ */
+
+.flashlight {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background: #000;
+  /* Потолок непрозрачности: даже в худшем случае кадр не становится
+     абсолютно чёрным, картинка остаётся угадываемой. */
+  opacity: 0.9;
+  /* Внешняя зона не уходит в 1.0, а держится 0.86: вместе с opacity слоя
+     это оставляет ~22 % яркости кадра за пределами пятна. Видно, что там
+     что-то есть, — но разглядеть нельзя. Раньше кадр был чёрным начисто. */
+  -webkit-mask-image: radial-gradient(
+    circle var(--fl-r, 21rem) at var(--fl-x, 50%) var(--fl-y, 50%),
+    transparent 0%,
+    rgba(0, 0, 0, 0.4) 50%,
+    rgba(0, 0, 0, 0.86) 100%
+  );
+  mask-image: radial-gradient(
+    circle var(--fl-r, 21rem) at var(--fl-x, 50%) var(--fl-y, 50%),
+    transparent 0%,
+    rgba(0, 0, 0, 0.4) 50%,
+    rgba(0, 0, 0, 0.86) 100%
+  );
+}
+
+@media (hover: none), (pointer: coarse) {
+  .flashlight {
+    display: none;
+  }
+}
+
+/* ============================================================
+   DOT-MATRIX — точечный индикатор.
+   Техника из подборки (dotmatrix): каждая точка получает свой
+   индекс через --i, а задержка считается как
+   index × шаг × цикл. Отсюда «бегущая» волна без единого
+   таймера: меняя --dmx-k, получаем другой рисунок (кольцо, змейку).
+   ============================================================ */
+
+.dmx {
+  display: grid;
+  grid-template-columns: repeat(var(--dmx-cols, 9), 1fr);
+  gap: 3px;
+}
+
+.dmx i {
+  aspect-ratio: 1;
+  background: var(--color-blood-bright);
+  opacity: 0.07;
+  animation: dmx-bloom var(--dmx-cycle, 1.35s) ease-in-out infinite;
+  animation-delay: calc(var(--i) * var(--dmx-k, 0.045) * var(--dmx-cycle, 1.35s));
+}
+
+@keyframes dmx-bloom {
+  0%, 100% { opacity: 0.07; }
+  50% { opacity: 1; box-shadow: 0 0 6px rgba(168, 28, 28, 0.9); }
+}
+
+/* ============================================================
+   BOIL — «кипящий» контур (техника doodle-icons).
+   feTurbulence + feDisplacementMap: смещение пикселей по шуму,
+   а seed переключается дискретно. Именно дискретный шаг читается
+   как дрожь нарисованной от руки линии, в отличие от плавного.
+   ============================================================ */
+
+.boil {
+  filter: url(#boil-soft);
+}
+
+.boil-hard {
+  filter: url(#boil-hard);
+}
+
+/* ============================================================
+   ПРОЧЕРЧИВАНИЕ — линия/контур рисуются на появлении.
+   pathLength="1" в разметке нормализует длину, поэтому
+   dasharray/dashoffset не нужно считать руками в JS.
+   ============================================================ */
+
+.draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw-line 0.8s var(--ease-slow) forwards;
+}
+
+@keyframes draw-line {
+  to { stroke-dashoffset: 0; }
+}
+
+/* ============================================================
+   ПРОВАЛ В ТЕМНОТУ — редкое короткое затемнение кадра.
+   Не полное и не частое: это не мигание, а «помеха на записи».
+   Цикл 23 s и глубина 0.62 — заметно, но не мешает читать.
+   ============================================================ */
+
+@keyframes dropout {
+  0%, 91%, 100% { opacity: 0; }
+  92% { opacity: 0.68; }
+  93.6% { opacity: 0.24; }
+  95.2% { opacity: 0; }
+}
+
+.dropout {
+  animation: dropout 11s ease-in-out infinite;
+}
+
+/* ============================================================
+   РЕШЁТКА ЛАЙТБОКСА — просмотр кадров во весь экран.
+   ============================================================ */
+
+.lb-backdrop {
+  background: rgba(3, 3, 4, 0.94);
+  backdrop-filter: blur(3px);
+}
+
+.lb-in {
+  animation: lb-in 0.26s var(--ease-slow) both;
+}
+
+@keyframes lb-in {
+  from { opacity: 0; transform: scale(1.04); filter: blur(10px); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+
+/* ============================================================
+   ОТКЛЮЧЕНИЕ НОВЫХ ЭФФЕКТОВ ПРИ reduced-motion.
+   Статичный кадр остаётся полностью читаемым: зерно, виньетка
+   и развёртка на месте, движения нет.
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  body::before,
+  body::after,
+  .dmx i,
+  .dropout,
+  .draw,
+  .lb-in {
+    animation: none !important;
+  }
+  .boil,
+  .boil-hard {
+    filter: none;
+  }
+  .cctv img {
+    transition: none;
+  }
+  /* Страховка на случай, если «уменьшить движение» включили ПОСЛЕ загрузки:
+     компонент решает один раз при монтировании, поэтому здесь слой
+     убирается ещё и на уровне CSS. Иначе первый экран остаётся чёрным. */
+  .flashlight {
+    display: none !important;
+  }
+}
+
+/* ============================================================
+   CRT — заставка включается, как кинескоп.
+   Электронно-лучевая трубка не «проявляется» плавно: сначала
+   вспыхивает горизонтальная линия, потом кадр разворачивается
+   по вертикали и один раз дёргается, прежде чем встать.
+   Ниже — ровно эта последовательность.
+   ============================================================ */
+
+@keyframes crt-on {
+  0% { transform: scaleY(0.004) scaleX(0.55); opacity: 0; filter: brightness(7); }
+  16% { transform: scaleY(0.008) scaleX(1); opacity: 1; filter: brightness(6); }
+  44% { transform: scaleY(1); filter: brightness(1.9); }
+  58% { transform: scaleY(0.35); filter: brightness(2.6); }
+  72% { transform: scaleY(1); filter: brightness(1.25); }
+  100% { transform: scaleY(1); filter: brightness(1); }
+}
+
+.crt-on {
+  transform-origin: center center;
+  animation: crt-on 0.45s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+/* Светлая полоса развёртки проходит по кадру сверху вниз */
+@keyframes crt-sweep {
+  0% { transform: translateY(-20vh); opacity: 0; }
+  12% { opacity: 0.85; }
+  100% { transform: translateY(125vh); opacity: 0; }
+}
+
+.crt-sweep {
+  animation: crt-sweep 0.6s linear 0.05s both;
+}
+
+/* ============================================================
+   ЗАСТАВКА — единый таймлайн на CSS.
+   Вся последовательность живёт в animation-delay, а не в таймерах
+   React. Причины, по которым это важно именно здесь:
+     1. Разметка приходит с сервера, поэтому заставка включается
+        с первого кадра — нет провала, когда сначала мелькает
+        первый экран, а через секунду поверх него падает чёрный слой;
+     2. последовательность не зависит от того, когда загрузился JS,
+        поэтому время показа одинаковое на телефоне и на десктопе;
+     3. она заканчивается сама (animation-fill-mode: forwards), даже
+        если гидратация не случилась вовсе.
+   Полная длительность — 3.2 с, содержимое видно с 0.24 с.
+   ============================================================ */
+
+/* Кадр гаснет и снимается со счёта. visibility отдельной анимацией:
+   она не интерполируется, а переключается шагом — так слой гарантированно
+   перестаёт ловить нажатия после исчезновения. */
+@keyframes intro-fade {
+  to { opacity: 0; }
+}
+
+@keyframes intro-off {
+  to { visibility: hidden; }
+}
+
+.intro {
+  animation:
+    intro-fade 0.34s ease-in 2.86s forwards,
+    intro-off 1ms linear 3.2s forwards;
+}
+
+/* Если заставку уже видели в этой сессии, её гасит атрибут на <html>,
+   выставленный до первой отрисовки. При «уменьшить движение» — тоже. */
+html[data-intro='off'] .intro,
+.intro--skipped {
+  display: none !important;
+}
+
+/* ============================================================
+   НА ТЕЛЕФОНЕ ЗАСТАВКИ НЕТ ВООБЩЕ.
+   Это осознанный отказ от приёма, а не компромисс.
+   Проверено на живом сайте в мобильной эмуляции (390×844): заставка
+   накрывает экран непрозрачным слоем, и первые секунды человек видит
+   чёрный прямоугольник с шестью строками моно-текста — на десктопе это
+   читается как «кадр с камеры», а на телефоне ровно как сломанная
+   страница. Владелец, открыв сайт с телефона, так это и воспринял.
+   Поэтому по грубому указателю или узкому экрану слой снимается
+   на уровне CSS — до первой отрисовки, без участия JS и без ожидания
+   гидратации. Первый экран появляется со своей обычной анимацией.
+   ============================================================ */
+@media (hover: none) and (pointer: coarse), (max-width: 640px) {
+  .intro {
+    display: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro {
+    display: none !important;
+  }
+  .crt-on,
+  .crt-sweep {
+    animation: none !important;
+  }
+}
+
+/* --- Фигура в проёме: то, что «объект обнаружен», должно быть видно ---
+   Раньше на этом месте была только красная вспышка, то есть тревога без
+   повода. Здесь из темноты медленно проступает силуэт и в самом конце
+   подаётся на шаг к камере — это и есть испуг. */
+@keyframes intro-figure {
+  0% { opacity: 0; transform: scale(1.06); filter: blur(7px); }
+  14% { opacity: 0.46; transform: scale(1); filter: blur(0); }
+  62% { opacity: 0.4; transform: scale(1.01); }
+  100% { opacity: 0.72; transform: scale(1.07); filter: blur(0.3px); }
+}
+
+.intro-figure {
+  opacity: 0;
+  animation: intro-figure 1.6s var(--ease-slow) 1.26s both;
+}
+
+/* Кровяной отсвет под фигурой: включается вместе с тревогой */
+.intro-blood {
+  opacity: 0;
+  animation: dread-pulse 1.6s ease-in-out 1.28s 2 both;
+}
+
+/* Строки журнала. Задержки задаются inline-стилем: так они видны
+   рядом с текстом, а не спрятаны в CSS. */
+.intro-line {
+  animation: signal-in 0.34s var(--ease-slow) both;
+}
+
+.intro-warn {
+  animation: signal-in 0.3s var(--ease-slow) 1.36s both;
+}
+
+.intro-title {
+  animation: title-slam 0.62s var(--ease-slow) 1.58s both;
+}
+
+.intro-sub {
+  animation: signal-in 0.3s var(--ease-slow) 1.5s both;
+}
+
+.intro-hint {
+  animation: signal-in 0.3s var(--ease-slow) 1.92s both;
 }

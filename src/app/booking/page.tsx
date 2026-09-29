@@ -3,7 +3,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { quests, getQuest, business } from '@/data/business';
 import Header from '@/components/Header';
+import PhoneInput from '@/components/PhoneInput';
 import Success from './Success';
+import { canonicalPhone, formatPhone, isCompletePhone } from '@/lib/phone';
 import { fmtDate, nextDays, SLOT_TIMES, type Form, EMPTY, type Step } from './data';
 
 export default function BookingPage() {
@@ -37,8 +39,9 @@ export default function BookingPage() {
 
   const selectedQuest = form.quest ? getQuest(form.quest) : undefined;
   const canContinueSlot = Boolean(form.quest && form.date && form.time);
-  const canSubmitContact =
-    form.name.trim().length >= 2 && form.phone.replace(/\D/g, '').length >= 10;
+  // Номер считается введённым только когда он полный и приведён к
+  // каноническому виду (+7XXXXXXXXXX) — «десять цифр» больше не пропуск.
+  const canSubmitContact = form.name.trim().length >= 2 && isCompletePhone(form.phone);
 
   async function submit() {
     if (sending) return;
@@ -48,7 +51,9 @@ export default function BookingPage() {
       const res = await fetch('/api/booking', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        // В форме телефон лежит как 10 национальных цифр; код страны
+        // добавляется ровно здесь — на сервер уходит только +7XXXXXXXXXX.
+        body: JSON.stringify({ ...form, phone: canonicalPhone(form.phone) }),
       });
       const data = await res.json().catch(() => null);
 
@@ -152,6 +157,7 @@ export default function BookingPage() {
                       </span>
                       <span className="mt-0.5 block font-mono text-[11px] text-dust">
                         {q.kicker}
+                        {q.price ? ` · ${q.price}` : ''}
                       </span>
                     </span>
                   </label>
@@ -171,6 +177,13 @@ export default function BookingPage() {
             >
               Далее
             </button>
+            {/* Кнопка без объяснения — та же проблема, что была у поля
+                телефона: непонятно, чего не хватает. */}
+            {!form.quest && (
+              <p className="mt-3 text-center font-mono text-[10px] text-dust">
+                Выберите квест — кнопка станет активной
+              </p>
+            )}
           </fieldset>
         )}
 
@@ -286,6 +299,11 @@ export default function BookingPage() {
                 Далее
               </button>
             </div>
+            {!canContinueSlot && (
+              <p className="mt-3 text-center font-mono text-[10px] text-dust">
+                {!form.date ? 'Выберите дату' : 'Выберите время'}
+              </p>
+            )}
           </div>
         )}
 
@@ -308,12 +326,20 @@ export default function BookingPage() {
                   id="bk-name"
                   type="text"
                   autoComplete="name"
+                  maxLength={80}
                   value={form.name}
                   onChange={(e) => set('name', e.target.value)}
                   placeholder="Как к тебе обращаться"
                   aria-invalid={Boolean(errors.name)}
                   className="w-full border border-iron bg-ash px-4 py-3.5 font-mono text-[14px] text-bone outline-none transition-colors placeholder:text-dust/50 focus:border-blood-bright"
                 />
+                {/* Та же логика, что у телефона: пока кнопка неактивна,
+                    человек должен видеть, чего не хватает. */}
+                {form.name.trim().length === 1 && (
+                  <p className="mt-2 font-mono text-[10px] text-dust">
+                    Имя из одной буквы — уточните, как обращаться
+                  </p>
+                )}
                 {errors.name && <FieldError text={errors.name} />}
               </div>
 
@@ -324,16 +350,11 @@ export default function BookingPage() {
                 >
                   Телефон
                 </label>
-                <input
+                <PhoneInput
                   id="bk-phone"
-                  type="tel"
-                  inputMode="tel"
-                  autoComplete="tel"
                   value={form.phone}
-                  onChange={(e) => set('phone', e.target.value)}
-                  placeholder="+7 700 000 00 00"
-                  aria-invalid={Boolean(errors.phone)}
-                  className="w-full border border-iron bg-ash px-4 py-3.5 font-mono text-[14px] text-bone outline-none transition-colors placeholder:text-dust/50 focus:border-blood-bright"
+                  onChange={(v) => set('phone', v)}
+                  invalid={Boolean(errors.phone)}
                 />
                 {errors.phone && <FieldError text={errors.phone} />}
               </div>
@@ -349,9 +370,12 @@ export default function BookingPage() {
                   { l: 'Дата', v: form.date ? fmtDate(form.date).d : '—' },
                   { l: 'Время', v: form.time || '—' },
                   { l: 'Игроки', v: String(form.players) },
-                  { l: 'Стоимость', v: 'Уточните у администратора' },
+                  {
+                    l: 'Стоимость',
+                    v: selectedQuest?.price ?? 'Уточните у администратора',
+                  },
                   { l: 'Имя', v: form.name || '—' },
-                  { l: 'Телефон', v: form.phone || '—' },
+                  { l: 'Телефон', v: formatPhone(form.phone) || '—' },
                 ].map((r) => (
                   <div key={r.l} className="flex items-baseline justify-between gap-4 px-5 py-3">
                     <dt className="font-mono text-[10px] tracking-[0.14em] text-dust uppercase">

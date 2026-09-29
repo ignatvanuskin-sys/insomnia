@@ -1,7 +1,10 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { quests, getQuest, business } from '@/data/business';
+import { hooks } from '@/data/copy';
+import { photoHref, photoFocus, questPhotos, heroPhoto } from '@/data/photos';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import RevealOnScroll from '@/components/RevealOnScroll';
@@ -69,6 +72,21 @@ export default async function QuestPage({ params }: Params) {
       <main id="main" className="pt-14 pb-16 sm:pt-16 sm:pb-0">
         {/* HERO квеста */}
         <section className="relative overflow-hidden border-b border-iron">
+          {/* Реальный кадр локации под «камерой наблюдения» */}
+          <div className="absolute inset-0" aria-hidden>
+            <span className="cctv block h-full w-full">
+              <Image
+                src={photoHref(questPhotos[q.slug] ?? heroPhoto)}
+                alt=""
+                fill
+                priority
+                sizes="100vw"
+                quality={70}
+                className="object-cover"
+                style={{ objectPosition: photoFocus(questPhotos[q.slug] ?? heroPhoto) }}
+              />
+            </span>
+          </div>
           <div className="light-leak absolute inset-0" aria-hidden />
           <div className="scanlines absolute inset-0" aria-hidden />
           <div className="relative z-10 mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-24">
@@ -117,8 +135,9 @@ export default async function QuestPage({ params }: Params) {
               <Fact label="Стоимость" value={q.price} />
             </dl>
             <p className="mt-6 font-mono text-[11px] leading-relaxed text-dust">
-              Эти параметры не опубликованы в открытом доступе. Назовёт их администратор —
-              напишите ему или оставьте заявку, и мы перезвоним.
+              {q.priceNote} Количество игроков, длительность и возраст в открытом
+              доступе не опубликованы — их назовёт администратор: напишите ему или
+              оставьте заявку, и мы перезвоним.
             </p>
           </div>
         </section>
@@ -131,11 +150,11 @@ export default async function QuestPage({ params }: Params) {
                 История
               </p>
               <h2 className="mt-5 font-display text-3xl leading-[1.05] font-black tracking-wide text-bone sm:text-5xl">
-                Что там произошло
+                {hooks[q.slug]?.title ?? 'Что там произошло'}
               </h2>
             </div>
             <div className="reveal mt-10 max-w-2xl space-y-5">
-              {q.story.map((p, i) => (
+              {(hooks[q.slug]?.lines ?? q.story).map((p, i) => (
                 <p
                   key={i}
                   className={`font-mono text-[13px] leading-relaxed ${
@@ -208,8 +227,8 @@ export default async function QuestPage({ params }: Params) {
                 Условия и запись
               </h2>
               <p className="mt-5 font-mono text-[12px] leading-relaxed text-dust">
-                {q.source}. Количество игроков, длительность, возраст и стоимость
-                подтверждает администратор — мы не публикуем неподтверждённые цифры.
+                {q.source}. Количество игроков, длительность и возраст подтверждает
+                администратор — мы не публикуем неподтверждённые цифры.
               </p>
             </div>
 

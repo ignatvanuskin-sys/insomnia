@@ -316,24 +316,178 @@ body::after {
 }
 
 /* ============================================================
+   LIGHT BEAM — светящаяся рамка, которая «проезжает» по периметру.
+   Техника: конический градиент вращается под маской «кольца».
+   ============================================================ */
+
+.beam-border {
+  position: relative;
+  isolation: isolate;
+}
+/* Свечение по краю карточки */
+.beam-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--beam-angle),
+    transparent 0%,
+    transparent 62%,
+    rgba(168, 28, 28, 0.05) 68%,
+    var(--color-blood-bright) 74%,
+    rgba(184, 69, 42, 0.6) 78%,
+    transparent 86%,
+    transparent 100%
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.45s var(--ease-slow);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Мягкий отсвет внутрь карточки — «свет из-за края» */
+.beam-border::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    120% 90% at var(--beam-x, 50%) var(--beam-y, 0%),
+    rgba(168, 28, 28, 0.14),
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity 0.45s var(--ease-slow);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.beam-border:hover::before,
+.beam-border:focus-within::before {
+  opacity: 1;
+  animation: beam-run 2.6s linear infinite;
+}
+
+.beam-border:hover::after,
+.beam-border:focus-within::after {
+  opacity: 1;
+}
+
+@property --beam-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes beam-run {
+  to {
+    --beam-angle: 360deg;
+  }
+}
+
+/* ============================================================
+   ORBS — медленно плывущие световые пятна на фоне.
+   Только CSS, без canvas: почти не стоит ресурсов.
+   ============================================================ */
+
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.85;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.orb-1 {
+  width: 42vmax;
+  height: 42vmax;
+  top: -12vmax;
+  left: -10vmax;
+  background: radial-gradient(circle, rgba(138, 24, 24, 0.75), transparent 68%);
+  animation: orb-drift-a 26s ease-in-out infinite;
+}
+
+.orb-2 {
+  width: 34vmax;
+  height: 34vmax;
+  right: -8vmax;
+  bottom: -10vmax;
+  background: radial-gradient(circle, rgba(196, 74, 46, 0.5), transparent 68%);
+  animation: orb-drift-b 32s ease-in-out infinite;
+}
+
+.orb-3 {
+  width: 24vmax;
+  height: 24vmax;
+  top: 42%;
+  left: 52%;
+  background: radial-gradient(circle, rgba(42, 212, 212, 0.16), transparent 70%);
+  animation: orb-drift-c 38s ease-in-out infinite;
+}
+
+@keyframes orb-drift-a {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(8vmax, 6vmax) scale(1.12); }
+  66% { transform: translate(3vmax, 12vmax) scale(0.94); }
+}
+
+@keyframes orb-drift-b {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  40% { transform: translate(-9vmax, -7vmax) scale(1.16); }
+  70% { transform: translate(-4vmax, -14vmax) scale(0.9); }
+}
+
+@keyframes orb-drift-c {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.3; }
+  50% { transform: translate(-50%, -50%) scale(1.4); opacity: 0.6; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orb {
+    animation: none !important;
+  }
+  .beam-border:hover::before {
+    animation: none;
+  }
+}
+
+/* ============================================================
    HORROR FX — эффекты заставки и атмосферных блоков.
    Всё чисто на CSS: анимации не блокируют главный поток
    и автоматически гасятся через prefers-reduced-motion.
    ============================================================ */
 
-/* --- Глитч: текст «ломается» и собирается обратно --- */
+/* --- Глитч: текст «дрожит», но остаётся читаемым ---
+   Приём: клип срезает ТОНКИЕ края (сверху и снизу по несколько процентов),
+   а основной эффект даёт расхождение «призрачных» слоёв по X.
+   inset(top bottom) оставляет видимой полосу 100 − top − bottom,
+   поэтому top и bottom держим малыми: раньше они доходили до 60%,
+   и заголовок выглядел сломанным. */
 @keyframes glitch-x {
   0%, 100% { transform: translateX(0); clip-path: inset(0 0 0 0); }
-  20% { transform: translateX(-3px); clip-path: inset(12% 0 62% 0); }
-  40% { transform: translateX(3px); clip-path: inset(58% 0 18% 0); }
-  60% { transform: translateX(-2px); clip-path: inset(34% 0 44% 0); }
-  80% { transform: translateX(2px); clip-path: inset(74% 0 6% 0); }
+  5% { transform: translateX(-1px); clip-path: inset(3% 0 7% 0); }
+  9% { transform: translateX(1px); clip-path: inset(7% 0 4% 0); }
+  13%, 76% { transform: translateX(0); clip-path: inset(0 0 0 0); }
+  80% { transform: translateX(-1px); clip-path: inset(5% 0 6% 0); }
+  84% { transform: translateX(1px); clip-path: inset(4% 0 8% 0); }
+  88%, 100% { transform: translateX(0); clip-path: inset(0 0 0 0); }
 }
 
 .glitch {
   position: relative;
   display: inline-block;
-  animation: glitch-x 2.4s steps(2, end) infinite;
+  animation: glitch-x 4.5s steps(1, end) infinite;
 }
 
 /* Два «призрачных» слоя красного и бирюзового — расходятся в стороны,
@@ -351,26 +505,30 @@ body::after {
 
 .glitch::before {
   color: var(--color-blood-bright);
-  animation: glitch-before 2.4s steps(2, end) infinite;
+  animation: glitch-before 4.5s steps(1, end) infinite;
 }
 
 .glitch::after {
   color: #2ad4d4;
-  animation: glitch-after 2.4s steps(2, end) infinite;
+  animation: glitch-after 4.5s steps(1, end) infinite;
 }
 
+/* Призрачные слои повторяют ритм основного глитча: тот же цикл 4.5s
+   и те же «окна» сбоя, иначе расхождение цвета выдаёт артефакт. */
 @keyframes glitch-before {
-  0%, 100% { transform: translate(0, 0); clip-path: inset(0 0 0 0); }
-  25% { transform: translate(-4px, 1px); clip-path: inset(18% 0 54% 0); }
-  50% { transform: translate(3px, -1px); clip-path: inset(64% 0 12% 0); }
-  75% { transform: translate(-2px, 0); clip-path: inset(30% 0 48% 0); }
+  0%, 13%, 76%, 88%, 100% { transform: translate(0, 0); clip-path: inset(0 0 0 0); }
+  5% { transform: translate(-3px, 1px); clip-path: inset(4% 0 8% 0); }
+  9% { transform: translate(2.5px, -1px); clip-path: inset(8% 0 5% 0); }
+  80% { transform: translate(-2px, 0); clip-path: inset(6% 0 7% 0); }
+  84% { transform: translate(2px, 0); clip-path: inset(5% 0 9% 0); }
 }
 
 @keyframes glitch-after {
-  0%, 100% { transform: translate(0, 0); clip-path: inset(0 0 0 0); }
-  25% { transform: translate(4px, -1px); clip-path: inset(52% 0 22% 0); }
-  50% { transform: translate(-3px, 1px); clip-path: inset(8% 0 68% 0); }
-  75% { transform: translate(2px, 0); clip-path: inset(70% 0 8% 0); }
+  0%, 13%, 76%, 88%, 100% { transform: translate(0, 0); clip-path: inset(0 0 0 0); }
+  5% { transform: translate(3px, -1px); clip-path: inset(8% 0 5% 0); }
+  9% { transform: translate(-2.5px, 1px); clip-path: inset(4% 0 8% 0); }
+  80% { transform: translate(2px, 0); clip-path: inset(5% 0 9% 0); }
+  84% { transform: translate(-2px, 0); clip-path: inset(6% 0 7% 0); }
 }
 
 /* --- Помехи: горизонтальные полосы, «срывающие» кадр --- */

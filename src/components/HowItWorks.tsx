@@ -24,7 +24,7 @@ export default function HowItWorks() {
           {STEPS.map((s, i) => (
             <li
               key={s.n}
-              className="reveal group relative bg-ash p-6 transition-colors duration-500 hover:bg-smoke sm:p-7"
+              className="reveal group beam-border relative bg-ash p-6 transition-colors duration-500 hover:bg-smoke sm:p-7"
               style={{ transitionDelay: `${i * 40}ms` }}
             >
               <span className="font-mono text-[10px] tracking-[0.2em] text-blood-bright">

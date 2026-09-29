@@ -33,7 +33,7 @@ export default function Gallery() {
           {FRAMES.map((f) => (
             <div
               key={f.code}
-              className="reveal relative aspect-4/5 overflow-hidden border border-iron bg-ash"
+              className="reveal beam-border relative aspect-4/5 overflow-hidden border border-iron bg-ash"
             >
               <div
                 className="absolute inset-0"

@@ -23,6 +23,12 @@ export default function Home() {
       <main id="main" className="pt-14 pb-16 sm:pt-16 sm:pb-0">
         {/* ============ HERO ============ */}
         <section className="relative flex min-h-[92svh] items-center overflow-hidden">
+          {/* Медленно плывущие световые пятна — глубина вместо плоского фона */}
+          <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+            <span className="orb orb-1" />
+            <span className="orb orb-2" />
+            <span className="orb orb-3" />
+          </div>
           <div className="light-leak absolute inset-0" aria-hidden />
           <div
             className="absolute inset-0 opacity-[0.55]"
@@ -192,7 +198,7 @@ export default function Home() {
               {quests.map((q, i) => (
                 <article
                   key={q.slug}
-                  className="reveal group relative flex flex-col border border-iron bg-ash transition-colors duration-500 hover:border-slate"
+                  className="reveal group beam-border relative flex flex-col border border-iron bg-ash transition-colors duration-500 hover:border-slate"
                 >
                   <div
                     className="relative h-44 overflow-hidden border-b border-iron sm:h-56"
@@ -284,6 +290,10 @@ export default function Home() {
 
         {/* ============ ФИНАЛЬНЫЙ CTA ============ */}
         <section className="relative overflow-hidden border-t border-iron py-24 sm:py-32">
+          <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+            <span className="orb orb-1 opacity-30" />
+            <span className="orb orb-2 opacity-40" />
+          </div>
           <div className="light-leak absolute inset-0" aria-hidden />
           <div className="scanlines absolute inset-0" aria-hidden />
           <div className="relative z-10 mx-auto max-w-3xl px-4 text-center sm:px-6">

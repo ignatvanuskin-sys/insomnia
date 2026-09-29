@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
-import { business } from '@/data/business';
+import { business, SITE_URL } from '@/data/business';
 
 const inter = Inter({
   subsets: ['latin', 'cyrillic'],
@@ -14,8 +14,6 @@ const mono = JetBrains_Mono({
   variable: '--font-mono',
   display: 'swap',
 });
-
-const SITE_URL = 'https://insomnia-karaganda.kz';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

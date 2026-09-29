@@ -28,6 +28,14 @@
 /** Маркер неподтверждённого значения — рендерится как подсказка администратора. */
 export const UNCONFIRMED = '—';
 
+/**
+ * Публичный адрес сайта. Используется в metadata, Open Graph, sitemap и robots.
+ *
+ * Меняется в одном месте. Когда появится собственный домен, замените значение
+ * здесь и передеплойте — остальные файлы подхватят его автоматически.
+ */
+export const SITE_URL = 'https://insomnia-bbc-b318.vercel.app';
+
 export type Business = {
   name: string;
   legalCategory: string;
